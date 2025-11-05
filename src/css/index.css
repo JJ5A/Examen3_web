@@ -1,0 +1,10 @@
+/* Archivo principal de CSS - Importa todos los estilos */
+
+/* Estilos globales */
+@import './global.css';
+
+/* Estilos de componentes */
+@import './login.css';
+
+/* Estilos de páginas */
+@import './demo.css';
