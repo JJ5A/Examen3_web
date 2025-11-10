@@ -6,7 +6,7 @@
 
   const authService = new AuthService();
   
-  let horarios = null;
+  let horariosData = null;
   let isLoading = true;
   let error = null;
 
@@ -22,12 +22,19 @@
     try {
       console.log('📡 Cargando horarios...');
       
-      const response = await authService.authenticatedFetch('/api/horarios');
+      const response = await authService.authenticatedFetch('/api/movil/estudiante/horarios');
       
       if (response.ok) {
         const data = await response.json();
         console.log('📨 Horarios recibidos:', data);
-        horarios = data.data || data;
+        
+        // Extraer los datos según el formato del JSON
+        if (data.flag && data.data && Array.isArray(data.data)) {
+          horariosData = data.data;
+          console.log('✅ Horarios procesados:', horariosData);
+        } else {
+          throw new Error('Formato de respuesta incorrecto');
+        }
       } else {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
@@ -53,42 +60,22 @@
     goto('/');
   }
 
-  function organizarPorDia(materias) {
-    if (!Array.isArray(materias)) return {};
-    
-    const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-    const horariosPorDia = {};
-    
-    dias.forEach(dia => {
-      horariosPorDia[dia] = [];
-    });
-    
-    materias.forEach(materia => {
-      // Asumiendo que puede tener múltiples días
-      const diasMateria = materia.dias || materia.dia || [];
-      const diasArray = Array.isArray(diasMateria) ? diasMateria : [diasMateria];
-      
-      diasArray.forEach(dia => {
-        const diaLimpio = dia?.trim();
-        if (diaLimpio && horariosPorDia[diaLimpio]) {
-          horariosPorDia[diaLimpio].push(materia);
-        }
-      });
-    });
-    
-    // Ordenar por hora de inicio
-    Object.keys(horariosPorDia).forEach(dia => {
-      horariosPorDia[dia].sort((a, b) => {
-        const horaA = a.hora_inicio || a.horaInicio || '00:00';
-        const horaB = b.hora_inicio || b.horaInicio || '00:00';
-        return horaA.localeCompare(horaB);
-      });
-    });
-    
-    return horariosPorDia;
+  function formatearDia(dia) {
+    const dias = {
+      'lunes': 'Lunes',
+      'martes': 'Martes', 
+      'miercoles': 'Miércoles',
+      'jueves': 'Jueves',
+      'viernes': 'Viernes',
+      'sabado': 'Sábado'
+    };
+    return dias[dia] || dia;
   }
 
-  $: horariosPorDia = horarios ? organizarPorDia(horarios) : {};
+  function formatearHora(hora) {
+    if (!hora) return '';
+    return hora.replace('-', ' - ');
+  }
 </script>
 
 <main class="demo-container">
@@ -117,111 +104,109 @@
         Cerrar Sesión
       </button>
     </div>
-  {:else if horarios}
+  {:else if horariosData && horariosData.length > 0}
     <div class="horarios-content">
-      <div class="content-header">
-        <h2>Horario de Clases</h2>
-        <p class="subtitle">Consulta tu horario semanal de clases</p>
-      </div>
+      {#each horariosData as periodoData}
+        <div class="periodo-section">
+          <div class="periodo-header">
+            <h2>📅 {periodoData.periodo.descripcion_periodo}</h2>
+            <p class="periodo-info">
+              Periodo: <strong>{periodoData.periodo.clave_periodo}</strong> | 
+              Año: <strong>{periodoData.periodo.anio}</strong>
+            </p>
+          </div>
 
-      {#if Object.keys(horariosPorDia).some(dia => horariosPorDia[dia].length > 0)}
-        <div class="horarios-grid">
-          {#each Object.entries(horariosPorDia) as [dia, materias]}
-            {#if materias.length > 0}
-              <div class="dia-card">
-                <h3 class="dia-title">{dia}</h3>
-                
-                <div class="materias-dia">
-                  {#each materias as materia}
-                    <div class="materia-horario">
-                      <div class="materia-time">
-                        <span class="hora-inicio">{materia.hora_inicio || materia.horaInicio || 'N/A'}</span>
-                        -
-                        <span class="hora-fin">{materia.hora_fin || materia.horaFin || 'N/A'}</span>
-                      </div>
-                      
-                      <div class="materia-info">
-                        <div class="materia-nombre">
-                          {materia.materia || materia.nombre || 'Materia sin nombre'}
+          <!-- Vista por días de la semana -->
+          <div class="horarios-semana">
+            <h3>📅 Horario Semanal</h3>
+            <div class="dias-grid">
+              {#each ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'] as dia}
+                <div class="dia-card">
+                  <h4 class="dia-titulo">{formatearDia(dia)}</h4>
+                  <div class="materias-dia">
+                    {#each periodoData.horario.filter(materia => materia[dia] !== null) as materia}
+                      <div class="materia-horario">
+                        <div class="hora-badge">
+                          {formatearHora(materia[dia])}
                         </div>
-                        
-                        {#if materia.profesor}
-                          <div class="materia-profesor">
-                            👨‍🏫 {materia.profesor}
-                          </div>
-                        {/if}
-                        
-                        {#if materia.aula || materia.salon}
-                          <div class="materia-aula">
-                            🏫 {materia.aula || materia.salon}
-                          </div>
-                        {/if}
-                        
-                        {#if materia.grupo}
-                          <div class="materia-grupo">
-                            👥 Grupo {materia.grupo}
-                          </div>
-                        {/if}
+                        <div class="materia-info">
+                          <div class="materia-nombre">{materia.nombre_materia}</div>
+                          <div class="materia-clave">{materia.clave_materia}</div>
+                          <div class="materia-salon">🏫 {materia[`${dia}_clave_salon`]}</div>
+                          <div class="materia-grupo">👥 Grupo {materia.letra_grupo}</div>
+                        </div>
                       </div>
-                    </div>
-                  {/each}
+                    {/each}
+                    {#if periodoData.horario.filter(materia => materia[dia] !== null).length === 0}
+                      <div class="sin-clases">
+                        <span>Sin clases</span>
+                      </div>
+                    {/if}
+                  </div>
                 </div>
-              </div>
-            {/if}
-          {/each}
-        </div>
-      {:else}
-        <div class="no-data">
-          <h3>No hay horarios disponibles</h3>
-          <p>No se encontraron horarios para mostrar.</p>
-        </div>
-      {/if}
+              {/each}
+            </div>
+          </div>
 
-      <!-- Vista de tabla para pantallas más grandes -->
-      {#if Array.isArray(horarios) && horarios.length > 0}
-        <div class="tabla-horarios">
-          <h3>Vista de Tabla</h3>
-          <div class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Materia</th>
-                  <th>Profesor</th>
-                  <th>Horario</th>
-                  <th>Días</th>
-                  <th>Aula</th>
-                  <th>Grupo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {#each horarios as materia}
+          <!-- Vista de tabla completa -->
+          <div class="tabla-horarios">
+            <h3>📊 Vista de Tabla Completa</h3>
+            <div class="table-container">
+              <table class="horario-table">
+                <thead>
                   <tr>
-                    <td class="materia-cell">
-                      <strong>{materia.materia || materia.nombre}</strong>
-                    </td>
-                    <td>{materia.profesor || 'N/A'}</td>
-                    <td class="horario-cell">
-                      {materia.hora_inicio || materia.horaInicio || 'N/A'} - 
-                      {materia.hora_fin || materia.horaFin || 'N/A'}
-                    </td>
-                    <td>{Array.isArray(materia.dias) ? materia.dias.join(', ') : (materia.dia || 'N/A')}</td>
-                    <td>{materia.aula || materia.salon || 'N/A'}</td>
-                    <td>{materia.grupo || 'N/A'}</td>
+                    <th>Materia</th>
+                    <th>Clave</th>
+                    <th>Grupo</th>
+                    <th>Lunes</th>
+                    <th>Martes</th>
+                    <th>Miércoles</th>
+                    <th>Jueves</th>
+                    <th>Viernes</th>
+                    <th>Sábado</th>
                   </tr>
-                {/each}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {#each periodoData.horario as materia}
+                    <tr>
+                      <td class="materia-cell">
+                        <strong>{materia.nombre_materia}</strong>
+                      </td>
+                      <td class="clave-cell">{materia.clave_materia}</td>
+                      <td class="grupo-cell">Grupo {materia.letra_grupo}</td>
+                      {#each ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'] as dia}
+                        <td class="horario-cell">
+                          {#if materia[dia]}
+                            <div class="horario-info">
+                              <div class="tiempo">{formatearHora(materia[dia])}</div>
+                              <div class="salon">{materia[`${dia}_clave_salon`]}</div>
+                            </div>
+                          {:else}
+                            <span class="sin-clase">-</span>
+                          {/if}
+                        </td>
+                      {/each}
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      {/if}
-
-      <div class="actions">
-        <button on:click={goBack} class="action-button">
-          ← Regresar al Dashboard
-        </button>
-      </div>
+      {/each}
+    </div>
+  {:else}
+    <div class="no-data">
+      <h3>No hay horarios disponibles</h3>
+      <p>No se encontraron horarios para mostrar.</p>
     </div>
   {/if}
+
+  <div class="actions">
+    <button on:click={goBack} class="action-button">
+      ← Regresar al Dashboard
+    </button>
+  </div>
 </main>
 
 <style>
@@ -272,35 +257,51 @@
   }
 
   .horarios-content {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
   }
 
-  .content-header {
+  .periodo-section {
+    margin-bottom: 40px;
+  }
+
+  .periodo-header {
     text-align: center;
     margin-bottom: 30px;
-    padding: 20px;
+    padding: 24px;
     background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
     color: white;
     border-radius: 12px;
   }
 
-  .content-header h2 {
+  .periodo-header h2 {
     margin: 0 0 10px 0;
     font-size: 1.8rem;
   }
 
-  .subtitle {
+  .periodo-info {
     margin: 0;
     opacity: 0.9;
+    font-size: 1.1rem;
   }
 
-  .horarios-grid {
+  .horarios-semana {
+    margin-bottom: 40px;
+  }
+
+  .horarios-semana h3 {
+    color: #1e40af;
+    margin-bottom: 20px;
+    font-size: 1.4rem;
+    text-align: center;
+  }
+
+  .dias-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 20px;
-    margin-bottom: 40px;
+    margin-bottom: 30px;
   }
 
   .dia-card {
@@ -311,44 +312,48 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   }
 
-  .dia-title {
+  .dia-titulo {
     background: #f8fafc;
     padding: 16px;
     margin: 0;
     color: #1e40af;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     text-align: center;
     border-bottom: 1px solid #e2e8f0;
   }
 
   .materias-dia {
     padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+    min-height: 100px;
   }
 
   .materia-horario {
     border: 1px solid #f1f5f9;
     border-radius: 8px;
     padding: 12px;
+    margin-bottom: 12px;
     background: #fafafa;
     transition: background 0.2s ease;
+  }
+
+  .materia-horario:last-child {
+    margin-bottom: 0;
   }
 
   .materia-horario:hover {
     background: #f1f5f9;
   }
 
-  .materia-time {
+  .hora-badge {
+    background: #d97706;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
     font-weight: bold;
-    color: #d97706;
-    font-size: 1.1rem;
     margin-bottom: 8px;
     text-align: center;
-    padding: 8px;
-    background: white;
-    border-radius: 6px;
+    display: inline-block;
   }
 
   .materia-info {
@@ -360,27 +365,34 @@
   .materia-nombre {
     font-weight: bold;
     color: #1e40af;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
 
-  .materia-profesor,
-  .materia-aula,
+  .materia-clave,
+  .materia-salon,
   .materia-grupo {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: #64748b;
   }
 
+  .sin-clases {
+    text-align: center;
+    padding: 30px;
+    color: #9ca3af;
+    font-style: italic;
+  }
+
   .tabla-horarios {
-    margin-top: 40px;
     background: white;
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-top: 30px;
   }
 
   .tabla-horarios h3 {
     background: #f8fafc;
-    padding: 16px;
+    padding: 16px 24px;
     margin: 0;
     color: #1e40af;
     border-bottom: 1px solid #e2e8f0;
@@ -390,37 +402,76 @@
     overflow-x: auto;
   }
 
-  table {
+  .horario-table {
     width: 100%;
     border-collapse: collapse;
   }
 
-  th {
+  .horario-table th {
     background: #f1f5f9;
-    padding: 12px;
+    padding: 12px 8px;
     text-align: left;
     font-weight: bold;
     color: #475569;
     border-bottom: 1px solid #e2e8f0;
+    font-size: 0.9rem;
   }
 
-  td {
-    padding: 12px;
+  .horario-table td {
+    padding: 12px 8px;
     border-bottom: 1px solid #f1f5f9;
     color: #374151;
+    font-size: 0.85rem;
+    vertical-align: top;
   }
 
-  tr:hover td {
+  .horario-table tr:hover td {
     background: #fafafa;
   }
 
   .materia-cell strong {
     color: #1e40af;
+    font-size: 0.9rem;
+  }
+
+  .clave-cell {
+    font-weight: 500;
+    color: #64748b;
+  }
+
+  .grupo-cell {
+    color: #64748b;
   }
 
   .horario-cell {
-    font-weight: 500;
+    min-width: 80px;
+  }
+
+  .horario-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .tiempo {
+    font-weight: bold;
     color: #d97706;
+    font-size: 0.8rem;
+  }
+
+  .salon {
+    font-size: 0.75rem;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .sin-clase {
+    color: #9ca3af;
+    text-align: center;
+    display: block;
   }
 
   .no-data {
@@ -439,15 +490,65 @@
   .actions {
     text-align: center;
     padding: 20px;
+    margin-top: 30px;
+  }
+
+  .action-button {
+    background: #d97706;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.2s ease;
+  }
+
+  .action-button:hover {
+    background: #b45309;
+  }
+
+  .logout-button {
+    background: #dc2626;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: 12px;
+    transition: background 0.2s ease;
+  }
+
+  .logout-button:hover {
+    background: #b91c1c;
   }
 
   @media (max-width: 768px) {
-    .horarios-grid {
+    .dias-grid {
       grid-template-columns: 1fr;
     }
+
+    .horario-table th,
+    .horario-table td {
+      padding: 8px 4px;
+      font-size: 0.75rem;
+    }
     
-    .tabla-horarios {
-      display: none;
+    .horario-table th:nth-child(n+4),
+    .horario-table td:nth-child(n+4) {
+      min-width: 60px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .table-container {
+      font-size: 0.7rem;
+    }
+    
+    .horario-table th,
+    .horario-table td {
+      padding: 6px 2px;
     }
   }
 </style>
