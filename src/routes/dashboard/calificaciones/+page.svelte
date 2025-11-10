@@ -6,7 +6,7 @@
 
   const authService = new AuthService();
   
-  let calificaciones = null;
+  let calificacionesData = null;
   let isLoading = true;
   let error = null;
 
@@ -22,12 +22,19 @@
     try {
       console.log('📡 Cargando calificaciones...');
       
-      const response = await authService.authenticatedFetch('/api/calificaciones');
+      const response = await authService.authenticatedFetch('/api/movil/estudiante/calificaciones');
       
       if (response.ok) {
         const data = await response.json();
         console.log('📨 Calificaciones recibidas:', data);
-        calificaciones = data.data || data;
+        
+        // Extraer los datos según el formato del JSON
+        if (data.flag && data.data && Array.isArray(data.data)) {
+          calificacionesData = data.data;
+          console.log('✅ Calificaciones procesadas:', calificacionesData);
+        } else {
+          throw new Error('Formato de respuesta incorrecto');
+        }
       } else {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
@@ -51,6 +58,21 @@
   function handleLogout() {
     authService.logout();
     goto('/');
+  }
+
+  function calcularPromedioParcial(calificaciones) {
+    const calificacionesValidas = calificaciones.filter(c => c.calificacion !== null && c.calificacion !== '');
+    if (calificacionesValidas.length === 0) return 'N/A';
+    
+    const suma = calificacionesValidas.reduce((sum, c) => sum + parseFloat(c.calificacion), 0);
+    return (suma / calificacionesValidas.length).toFixed(1);
+  }
+
+  function obtenerUltimaCalificacion(calificaciones) {
+    const calificacionesValidas = calificaciones.filter(c => c.calificacion !== null && c.calificacion !== '');
+    if (calificacionesValidas.length === 0) return 'Sin calificar';
+    
+    return calificacionesValidas[calificacionesValidas.length - 1].calificacion;
   }
 </script>
 
@@ -80,49 +102,76 @@
         Cerrar Sesión
       </button>
     </div>
-  {:else if calificaciones}
+  {:else if calificacionesData && calificacionesData.length > 0}
     <div class="calificaciones-content">
-      <div class="content-header">
-        <h2>Reporte de Calificaciones</h2>
-        <p class="subtitle">Consulta tus calificaciones por materia</p>
-      </div>
+      {#each calificacionesData as periodoData}
+        <div class="periodo-section">
+          <div class="periodo-header">
+            <h2>📅 {periodoData.periodo.descripcion_periodo}</h2>
+            <p class="periodo-info">
+              Periodo: <strong>{periodoData.periodo.clave_periodo}</strong> | 
+              Año: <strong>{periodoData.periodo.anio}</strong>
+            </p>
+          </div>
 
-      {#if Array.isArray(calificaciones) && calificaciones.length > 0}
-        <div class="calificaciones-grid">
-          {#each calificaciones as materia}
-            <div class="materia-card">
-              <div class="materia-header">
-                <h3>{materia.materia || materia.nombre}</h3>
-                <div class="calificacion-badge" class:aprobada={parseFloat(materia.calificacion) >= 7}>
-                  {materia.calificacion}
+          {#if periodoData.materias && periodoData.materias.length > 0}
+            <div class="materias-grid">
+              {#each periodoData.materias as materiaData}
+                <div class="materia-card">
+                  <div class="materia-header">
+                    <div class="materia-info">
+                      <h3>{materiaData.materia.nombre_materia}</h3>
+                      <div class="materia-details">
+                        <span class="clave">{materiaData.materia.clave_materia}</span>
+                        <span class="grupo">Grupo {materiaData.materia.letra_grupo}</span>
+                      </div>
+                    </div>
+                    <div class="promedio-badge" 
+                         class:alta={calcularPromedioParcial(materiaData.calificaiones) >= 90}
+                         class:media={calcularPromedioParcial(materiaData.calificaiones) >= 70 && calcularPromedioParcial(materiaData.calificaiones) < 90}
+                         class:baja={calcularPromedioParcial(materiaData.calificaiones) < 70 && calcularPromedioParcial(materiaData.calificaiones) !== 'N/A'}>
+                      {calcularPromedioParcial(materiaData.calificaiones)}
+                    </div>
+                  </div>
+
+                  <div class="calificaciones-parciales">
+                    <h4>Calificaciones Parciales:</h4>
+                    <div class="parciales-grid">
+                      {#each materiaData.calificaiones as calificacion}
+                        <div class="parcial-item">
+                          <span class="parcial-numero">Parcial {calificacion.numero_calificacion}</span>
+                          <span class="parcial-calificacion" 
+                                class:calificado={calificacion.calificacion !== null}
+                                class:pendiente={calificacion.calificacion === null}>
+                            {calificacion.calificacion || 'Pendiente'}
+                          </span>
+                        </div>
+                      {/each}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              
-              <div class="materia-details">
-                <div><strong>Profesor:</strong> {materia.profesor || 'No disponible'}</div>
-                <div><strong>Créditos:</strong> {materia.creditos || 'N/A'}</div>
-                <div><strong>Periodo:</strong> {materia.periodo || 'N/A'}</div>
-                {#if materia.oportunidad}
-                  <div><strong>Oportunidad:</strong> {materia.oportunidad}</div>
-                {/if}
-              </div>
+              {/each}
             </div>
-          {/each}
+          {:else}
+            <div class="no-materias">
+              <p>No hay materias registradas para este periodo.</p>
+            </div>
+          {/if}
         </div>
-      {:else}
-        <div class="no-data">
-          <h3>No hay calificaciones disponibles</h3>
-          <p>No se encontraron calificaciones para mostrar.</p>
-        </div>
-      {/if}
-
-      <div class="actions">
-        <button on:click={goBack} class="action-button">
-          ← Regresar al Dashboard
-        </button>
-      </div>
+      {/each}
+    </div>
+  {:else}
+    <div class="no-data">
+      <h3>No hay calificaciones disponibles</h3>
+      <p>No se encontraron calificaciones para mostrar.</p>
     </div>
   {/if}
+
+  <div class="actions">
+    <button on:click={goBack} class="action-button">
+      ← Regresar al Dashboard
+    </button>
+  </div>
 </main>
 
 <style>
@@ -172,43 +221,52 @@
     max-width: 500px;
   }
 
+  .error-container h3 {
+    color: #991b1b;
+    margin-bottom: 10px;
+  }
+
   .calificaciones-content {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
   }
 
-  .content-header {
+  .periodo-section {
+    margin-bottom: 40px;
+  }
+
+  .periodo-header {
     text-align: center;
     margin-bottom: 30px;
-    padding: 20px;
+    padding: 24px;
     background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
     color: white;
     border-radius: 12px;
   }
 
-  .content-header h2 {
+  .periodo-header h2 {
     margin: 0 0 10px 0;
     font-size: 1.8rem;
   }
 
-  .subtitle {
+  .periodo-info {
     margin: 0;
     opacity: 0.9;
+    font-size: 1.1rem;
   }
 
-  .calificaciones-grid {
+  .materias-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 24px;
   }
 
   .materia-card {
     background: white;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
-    padding: 20px;
+    padding: 24px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
@@ -221,45 +279,101 @@
   .materia-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
     border-bottom: 1px solid #e2e8f0;
   }
 
-  .materia-header h3 {
-    margin: 0;
+  .materia-info h3 {
+    margin: 0 0 8px 0;
     color: #1e40af;
-    font-size: 1.1rem;
-    flex: 1;
-  }
-
-  .calificacion-badge {
-    background: #ef4444;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-weight: bold;
-    font-size: 1.1rem;
-    min-width: 60px;
-    text-align: center;
-  }
-
-  .calificacion-badge.aprobada {
-    background: #059669;
+    font-size: 1.2rem;
+    line-height: 1.3;
   }
 
   .materia-details {
-    display: grid;
-    gap: 8px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
   }
 
-  .materia-details div {
-    font-size: 0.9rem;
+  .clave, .grupo {
+    background: #f1f5f9;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  .promedio-badge {
+    background: #9ca3af;
+    color: white;
+    padding: 12px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    min-width: 80px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .promedio-badge.alta {
+    background: #059669;
+  }
+
+  .promedio-badge.media {
+    background: #f59e0b;
+  }
+
+  .promedio-badge.baja {
+    background: #dc2626;
+  }
+
+  .calificaciones-parciales h4 {
+    margin: 0 0 16px 0;
     color: #374151;
+    font-size: 1rem;
   }
 
-  .no-data {
+  .parciales-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+  }
+
+  .parcial-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .parcial-numero {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-bottom: 4px;
+  }
+
+  .parcial-calificacion {
+    font-size: 1.1rem;
+    font-weight: bold;
+  }
+
+  .parcial-calificacion.calificado {
+    color: #1e40af;
+  }
+
+  .parcial-calificacion.pendiente {
+    color: #9ca3af;
+    font-style: italic;
+  }
+
+  .no-materias, .no-data {
     text-align: center;
     padding: 60px 20px;
     background: #f8fafc;
@@ -267,7 +381,7 @@
     margin: 20px 0;
   }
 
-  .no-data h3 {
+  .no-materias h3, .no-data h3 {
     color: #64748b;
     margin-bottom: 10px;
   }
@@ -275,17 +389,63 @@
   .actions {
     text-align: center;
     padding: 20px;
+    margin-top: 30px;
+  }
+
+  .action-button {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.2s ease;
+  }
+
+  .action-button:hover {
+    background: #2563eb;
+  }
+
+  .logout-button {
+    background: #dc2626;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: 12px;
+    transition: background 0.2s ease;
+  }
+
+  .logout-button:hover {
+    background: #b91c1c;
   }
 
   @media (max-width: 768px) {
-    .calificaciones-grid {
+    .materias-grid {
       grid-template-columns: 1fr;
     }
     
     .materia-header {
       flex-direction: column;
       align-items: flex-start;
-      gap: 10px;
+      gap: 12px;
+    }
+    
+    .promedio-badge {
+      align-self: flex-start;
+    }
+    
+    .parciales-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .parciales-grid {
+      grid-template-columns: 1fr;
     }
   }
 </style>
