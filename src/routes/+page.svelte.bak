@@ -1,0 +1,182 @@
+<script>
+  import { onMount } from 'svelte';
+  import { Login } from '$lib';
+  import { AuthService } from '$lib/auth.js';
+  import '../css/demo.css';
+
+  // Usa el proxy local para evitar CORS
+  const authService = new AuthService();
+
+  // Estado (Svelte 3/4)
+  let loginResult = '';
+  let showResult = false;
+  let userInfo = null;
+  let isLoggedIn = false;
+
+  onMount(async () => {
+    if (authService.isAuthenticated()) {
+      isLoggedIn = true;
+      userInfo = authService.getUserInfo();
+      
+      // Intentar cargar datos del estudiante si ya está autenticado
+      try {
+        const studentData = await authService.getStudentData();
+        userInfo = {
+          ...userInfo,
+          studentData: studentData.data
+        };
+      } catch (error) {
+        console.log('No se pudieron cargar los datos del estudiante al inicio:', error.message);
+      }
+    }
+  });
+
+  function showMsg(msg, ms = 5000) {
+    loginResult = msg;
+    showResult = true;
+    const t = setTimeout(() => (showResult = false), ms);
+    // prevent double timers on navegación rápida (opcional)
+    return () => clearTimeout(t);
+  }
+
+  // Acepta evento Svelte (event.detail) o dato directo (prop callback)
+  async function handleLoginSuccess(evtOrData) {
+    const data = evtOrData?.detail ?? evtOrData ?? {};
+    console.log('Login exitoso:', data);
+
+    isLoggedIn = true;
+    userInfo = authService.getUserInfo();
+    
+    try {
+      // Obtener datos del estudiante
+      showMsg('Obteniendo datos del estudiante...');
+      const studentData = await authService.getStudentData();
+      console.log('Datos del estudiante:', studentData);
+      
+      // Actualizar userInfo con los datos del estudiante
+      userInfo = {
+        ...userInfo,
+        studentData: studentData.data
+      };
+      
+      showMsg(`¡Bienvenido ${studentData.data.persona}!`);
+    } catch (error) {
+      console.error('Error al obtener datos del estudiante:', error);
+      showMsg(`Login exitoso, pero no se pudieron cargar los datos: ${error.message}`);
+    }
+  }
+
+  function handleLoginError(evtOrErr) {
+    const error = evtOrErr?.detail ?? evtOrErr ?? {};
+    console.error('Error en login:', error);
+
+    isLoggedIn = false;
+    userInfo = null;
+    showMsg(`Error: ${error.error ?? error.message ?? 'Login fallido'}`);
+  }
+
+  function handleLogout() {
+    authService.logout();
+    isLoggedIn = false;
+    userInfo = null;
+    showMsg('Sesión cerrada exitosamente', 3000);
+  }
+
+  async function makeAuthenticatedRequest() {
+    try {
+      // Mejor usa URL absoluta (evitas CORS raros)
+      const response = await authService.authenticatedFetch('/api/profile');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      showMsg(`Datos del perfil: ${JSON.stringify(data)}`);
+    } catch (e) {
+      showMsg(`Error al obtener perfil: ${e.message}`);
+    }
+  }
+</script>
+
+<main class="demo-container">
+  <div class="demo-header">
+    <h1 style="font-size: 60px;color: #333;"><b>Tecnologico Nacional de Mexico en Celaya</b></h1>
+  </div>
+
+  {#if showResult}
+    <div
+      class="result-container"
+      class:success={loginResult.includes('Bienvenido') || loginResult.includes('exitosa')}
+      class:error={loginResult.includes('Error')}
+    >
+      {loginResult}
+    </div>
+  {/if}
+
+  {#if isLoggedIn && userInfo}
+    <div class="user-info">
+      <h2>Usuario Autenticado</h2>
+      
+      {#if userInfo.studentData}
+        <div class="student-info">
+          <h3>Datos del Estudiante</h3>
+          <div class="info-grid">
+            <div><strong>Nombre:</strong> {userInfo.studentData.persona}</div>
+            <div><strong>Número de Control:</strong> {userInfo.studentData.numero_control}</div>
+            <div><strong>Email:</strong> {userInfo.studentData.email}</div>
+            <div><strong>Semestre:</strong> {userInfo.studentData.semestre}</div>
+            <div><strong>Promedio Ponderado:</strong> {parseFloat(userInfo.studentData.promedio_ponderado).toFixed(2)}</div>
+            <div><strong>Promedio Aritmético:</strong> {parseFloat(userInfo.studentData.promedio_aritmetico).toFixed(2)}</div>
+            <div><strong>Créditos Acumulados:</strong> {userInfo.studentData.creditos_acumulados}</div>
+            <div><strong>% Avance:</strong> {userInfo.studentData.porcentaje_avance}%</div>
+            <div><strong>Materias Cursadas:</strong> {userInfo.studentData.materias_cursadas}</div>
+            <div><strong>Materias Aprobadas:</strong> {userInfo.studentData.materias_aprobadas}</div>
+            <div><strong>Materias Reprobadas:</strong> {userInfo.studentData.materias_reprobadas}</div>
+          </div>
+          
+          {#if userInfo.studentData.foto}
+            <div class="student-photo">
+              <img src="data:image/jpeg;base64,{userInfo.studentData.foto}" alt="Foto del estudiante" />
+            </div>
+          {/if}
+        </div>
+      {:else}
+        <div class="info-grid">
+          <div><strong>Tipo:</strong> {userInfo.userType}</div>
+          <div><strong>ID:</strong> {userInfo.sub}</div>
+          <div><strong>Emisor:</strong> {userInfo.iss}</div>
+          <div><strong>Token expira:</strong> {userInfo.isExpired ? 'Expirado' : 'Válido'}</div>
+        </div>
+      {/if}
+      
+      <div class="user-actions">
+        <button on:click={makeAuthenticatedRequest} class="action-button">
+          Hacer Petición Autenticada
+        </button>
+        <button on:click={handleLogout} class="logout-button">
+          Cerrar Sesión
+        </button>
+      </div>
+    </div>
+  {/if}
+
+  {#if !isLoggedIn}
+    <!-- Opción A: tu componente <Login> DISPARA EVENTOS "success" y "error" -->
+    <Login
+      title="Iniciar Sesión"
+      submitButtonText="Iniciar Sesión"
+      apiUrl="/api/login"
+      on:success={handleLoginSuccess}
+      on:error={handleLoginError}
+    />
+
+    <!--
+    Opción B (coméntala si usas eventos):
+    Si tu <Login> espera props-callbacks, usa:
+    <Login
+      title="Iniciar Sesión"
+      submitButtonText="Iniciar Sesión"
+      apiUrl="/api/login"
+      onsuccess={handleLoginSuccess}
+      onerror={handleLoginError}
+    />
+    -->
+  {/if}
+</main>

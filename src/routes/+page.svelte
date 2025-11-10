@@ -1,85 +1,78 @@
 <script>
-	import { Login } from '$lib';
-	import '../css/demo.css';
+  import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
+  import { Login } from '$lib';
+  import { AuthService } from '$lib/auth.js';
+  import '../css/demo.css';
 
-	// Estado para mostrar la respuesta del login
-	let loginResult = $state('');
-	let showResult = $state(false);
+  // Crear instancia del servicio de autenticación
+  const authService = new AuthService();
 
-	// Función que maneja el evento de login
-	async function handleLogin(data) {
-		console.log('Datos de login:', data);
-		
-		// Simular una petición al servidor
-		await new Promise(resolve => setTimeout(resolve, 1500));
-		
-		// Simular respuesta exitosa o de error
-		const isSuccess = Math.random() > 0.3; // 70% de probabilidad de éxito
-		
-		if (isSuccess) {
-			loginResult = '¡Bienvenido! Has iniciado sesión con: ' + data.email;
-		} else {
-			loginResult = 'Error: Credenciales incorrectas. Inténtalo de nuevo.';
-		}
-		
-		showResult = true;
-		
-		// Ocultar el resultado después de 5 segundos
-		setTimeout(() => {
-			showResult = false;
-		}, 5000);
-	}
+  // Estado para mostrar mensajes
+  let loginResult = '';
+  let showResult = false;
+
+  onMount(() => {
+    // Si ya está autenticado, redirigir al dashboard
+    if (authService.isAuthenticated()) {
+      goto('/dashboard');
+    }
+  });
+
+  function showMsg(msg, ms = 5000) {
+    loginResult = msg;
+    showResult = true;
+    setTimeout(() => (showResult = false), ms);
+  }
+
+  // Manejar login exitoso
+  async function handleLoginSuccess(evtOrData) {
+    const data = evtOrData?.detail ?? evtOrData ?? {};
+    console.log('Login exitoso:', data);
+
+    try {
+      showMsg('Login exitoso. Redirigiendo...');
+      
+      // Pequeña pausa para mostrar el mensaje
+      setTimeout(() => {
+        goto('/dashboard');
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Error en redirección:', error);
+      showMsg(`Error: ${error.message}`);
+    }
+  }
+
+  // Manejar error de login
+  function handleLoginError(evtOrErr) {
+    const error = evtOrErr?.detail ?? evtOrErr ?? {};
+    console.error('Error en login:', error);
+    showMsg(`Error en login: ${error.message || 'Credenciales incorrectas'}`);
+  }
 </script>
 
 <main class="demo-container">
-	<div class="demo-header">
-		<h1>Demo del Componente Login</h1>
-		<p>Este es un ejemplo de uso del componente Login de Svelte 5</p>
-	</div>
+  <div class="demo-header">
+    <h1 style="font-size: 60px;color: #333;"><b>Tecnologico Nacional de Mexico en Celaya</b></h1>
+  </div>
 
-	<!-- Resultado del login -->
-	{#if showResult}
-		<div class="result-container" class:success={loginResult.includes('Bienvenido')} class:error={loginResult.includes('Error')}>
-			{loginResult}
-		</div>
-	{/if}
+  {#if showResult}
+    <div
+      class="result-container"
+      class:success={loginResult.includes('exitoso') || loginResult.includes('Redirigiendo')}
+      class:error={loginResult.includes('Error')}
+    >
+      {loginResult}
+    </div>
+  {/if}
 
-	<!-- Componente Login -->
-	<Login 
-		title="Acceder a mi cuenta"
-		submitButtonText="Iniciar Sesión"
-		onlogin={handleLogin}
-	/>
-
-	<!-- Información adicional -->
-	<div class="info-section">
-		<h2>Características del componente:</h2>
-		<ul>
-			<li>✅ Validación de email en tiempo real</li>
-			<li>✅ Validación de contraseña (mínimo 6 caracteres)</li>
-			<li>✅ Estado de carga con spinner</li>
-			<li>✅ Manejo de errores</li>
-			<li>✅ Botón para limpiar formulario</li>
-			<li>✅ Diseño responsive</li>
-			<li>✅ Accesibilidad completa</li>
-			<li>✅ Svelte 5 con runes ($state, $derived, $props)</li>
-		</ul>
-
-		<h3>Cómo usar:</h3>
-		<pre><code>&lt;script&gt;
-	import &#123; Login &#125; from '$lib';
-
-	function handleLogin(data) &#123;
-		console.log('Email:', data.email);
-		console.log('Password:', data.password);
-		// Aquí enviarías los datos a tu API
-	&#125;
-&lt;/script&gt;
-
-&lt;Login 
-	title="Mi Login"
-	submitButtonText="Entrar"
-	onlogin=&#123;handleLogin&#125;
-/&gt;</code></pre>
-	</div>
+  <!-- Solo mostrar login -->
+  <Login
+    title="Iniciar Sesión"
+    submitButtonText="Iniciar Sesión"
+    apiUrl="/api/login"
+    on:success={handleLoginSuccess}
+    on:error={handleLoginError}
+  />
 </main>

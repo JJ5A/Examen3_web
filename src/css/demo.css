@@ -123,4 +123,114 @@ code {
 		padding: 16px;
 		font-size: 13px;
 	}
+
+	.info-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.user-actions {
+		flex-direction: column;
+	}
+}
+
+/* Estilos para información del usuario */
+.user-info {
+	max-width: 600px;
+	margin: 0 auto 40px auto;
+	padding: 24px;
+	background: #f8fafc;
+	border-radius: 12px;
+	border: 1px solid #e2e8f0;
+}
+
+.user-info h2 {
+	color: #111827;
+	font-size: 20px;
+	font-weight: 600;
+	margin: 0 0 16px 0;
+	text-align: center;
+}
+
+.info-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 12px;
+	margin-bottom: 20px;
+}
+
+.info-grid div {
+	padding: 8px 12px;
+	background: white;
+	border-radius: 6px;
+	font-size: 14px;
+}
+
+.user-actions {
+	display: flex;
+	gap: 12px;
+	justify-content: center;
+}
+
+.action-button {
+	background: #3b82f6;
+	color: white;
+	border: none;
+	padding: 10px 16px;
+	border-radius: 6px;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.action-button:hover {
+	background: #2563eb;
+	transform: translateY(-1px);
+}
+
+.logout-button {
+	background: #ef4444;
+	color: white;
+	border: none;
+	padding: 10px 16px;
+	border-radius: 6px;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.logout-button:hover {
+	background: #dc2626;
+	transform: translateY(-1px);
+}
+
+/* Estilos para los datos del estudiante */
+.student-info {
+	margin-top: 20px;
+	padding: 20px;
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 8px;
+}
+
+.student-info h3 {
+	margin-top: 0;
+	margin-bottom: 15px;
+	color: #1e40af;
+	font-size: 1.2rem;
+}
+
+.student-photo {
+	margin-top: 20px;
+	text-align: center;
+}
+
+.student-photo img {
+	width: 120px;
+	height: 150px;
+	object-fit: cover;
+	border: 2px solid #e2e8f0;
+	border-radius: 8px;
+	box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }

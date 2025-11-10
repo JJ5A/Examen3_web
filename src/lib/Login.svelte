@@ -1,12 +1,19 @@
 <script>
 	import '../css/login.css';
+	import { AuthService } from './auth.js';
+	
+	// Crear una instancia local del servicio
+	const authService = new AuthService();
 	
 	// Props del componente
 	let { 
 		title = "Iniciar Sesión",
 		submitButtonText = "Entrar",
 		disabled = false,
-		onlogin
+		apiUrl = '/api/login', // URL de la API por defecto
+		onlogin,
+		onsuccess,
+		onerror
 	} = $props();
 
 	// Estado reactivo del formulario
@@ -32,6 +39,88 @@
 		errors = {
 			email: '',
 			password: ''
+		};
+	}
+
+	// Función para realizar la petición de login
+	async function performLogin(credentials) {
+		return await authService.login(credentials.email, credentials.password, apiUrl);
+	}
+
+	// Función para manejar una respuesta exitosa
+	function handleLoginSuccess(data) {
+		// El token ya fue guardado por el AuthService (si la respuesta tiene el formato esperado)
+		// Usar accesso seguro a propiedades para evitar errores si la respuesta no tiene el mismo shape
+		const token = data?.message?.login?.token || data?.token || data?.accessToken || null;
+		const userType = data?.type || data?.userType || authService.getUserType() || 'unknown';
+
+		if (!token) {
+			// Si no hay token, lanzar un error para que el flujo de error lo maneje
+			handleLoginError(new Error('Token no recibido desde el servidor'), data);
+			return;
+		}
+
+		// Garantizar que el token esté guardado en el servicio (por si el servidor devolvió token en otra propiedad)
+		try {
+			authService.setToken(token, userType);
+		} catch (err) {
+			console.warn('No se pudo guardar el token en authService:', err);
+		}
+
+		// Llamar callback de éxito si existe
+		if (onsuccess) {
+			onsuccess({
+				token,
+				userType,
+				fullResponse: data
+			});
+		}
+
+		// También llamar onlogin para compatibilidad
+		if (onlogin) {
+			onlogin({
+				email,
+				password,
+				token,
+				success: true,
+				data
+			});
+		}
+	}
+
+	// Función para manejar errores de login
+	function handleLoginError(error, serverData = null) {
+		let errorMessage = 'Error al iniciar sesión';
+		
+		if (serverData) {
+			errorMessage = serverData.message || 'Credenciales incorrectas';
+		} else {
+			errorMessage = error.message || errorMessage;
+		}
+
+		// Llamar callback de error si existe
+		if (onerror) {
+			onerror({
+				error: errorMessage,
+				originalError: error,
+				serverResponse: serverData
+			});
+		}
+
+		// También llamar onlogin para compatibilidad
+		if (onlogin) {
+			onlogin({
+				email,
+				password,
+				success: false,
+				error: errorMessage
+			});
+		}
+
+		// Mostrar error en el formulario
+		errors = {
+			email: '',
+			password: errorMessage
 		};
 	}
 
@@ -63,14 +152,30 @@
 			return;
 		}
 
-		// Simular loading
+		// Realizar petición de login
 		isLoading = true;
 
 		try {
-			// Llamar función de callback si existe
-			if (onlogin) {
-				await onlogin({ email, password });
+			const credentials = { email, password };
+			const loginResponse = await performLogin(credentials);
+			
+			// Manejar respuesta exitosa
+			handleLoginSuccess(loginResponse);
+			
+		} catch (error) {
+			console.error('Error en login:', error);
+			
+			// Intentar obtener datos del servidor si la respuesta tiene contenido
+			let serverData = null;
+			if (error.response) {
+				try {
+					serverData = await error.response.json();
+				} catch (parseError) {
+					// No hay datos del servidor o no es JSON
+				}
 			}
+			
+			handleLoginError(error, serverData);
 		} finally {
 			isLoading = false;
 		}
@@ -124,14 +229,12 @@
 					<span class="error-message">{errors.password}</span>
 				{/if}
 			</div>
-
 			<!-- Botones -->
 			<div class="form-actions">
 				<button
 					type="submit"
 					disabled={!isFormValid || disabled || isLoading}
-					class="submit-button"
-				>
+					class="submit-button">
 					{#if isLoading}
 						<span class="loading-spinner"></span>
 						Cargando...
@@ -139,13 +242,11 @@
 						{submitButtonText}
 					{/if}
 				</button>
-
 				<button
 					type="button"
 					onclick={clearForm}
 					disabled={disabled || isLoading}
-					class="clear-button"
-				>
+					class="clear-button">
 					Limpiar
 				</button>
 			</div>

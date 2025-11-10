@@ -1,0 +1,240 @@
+// Servicio de autenticación para manejar tokens JWT
+
+/**
+ * Clase para manejar la autenticación y tokens JWT
+ */
+export class AuthService {
+	constructor(baseUrl = '') {
+		this.baseUrl = baseUrl;
+		this.tokenKey = 'authToken';
+		this.userTypeKey = 'userType';
+	}
+
+	/**
+	 * Obtiene el token del localStorage
+	 * @returns {string|null} Token JWT o null si no existe
+	 */
+	getToken() {
+		if (typeof window !== 'undefined') {
+			return localStorage.getItem(this.tokenKey);
+		}
+		return null;
+	}
+
+	/**
+	 * Obtiene el tipo de usuario del localStorage
+	 * @returns {string|null} Tipo de usuario o null si no existe
+	 */
+	getUserType() {
+		if (typeof window !== 'undefined') {
+			return localStorage.getItem(this.userTypeKey);
+		}
+		return null;
+	}
+
+	/**
+	 * Guarda el token en localStorage
+	 * @param {string} token - Token JWT
+	 * @param {string} userType - Tipo de usuario
+	 */
+	setToken(token, userType = 'unknown') {
+		if (typeof window !== 'undefined') {
+			localStorage.setItem(this.tokenKey, token);
+			localStorage.setItem(this.userTypeKey, userType);
+		}
+	}
+
+	/**
+	 * Elimina el token del localStorage (logout)
+	 */
+	removeToken() {
+		if (typeof window !== 'undefined') {
+			localStorage.removeItem(this.tokenKey);
+			localStorage.removeItem(this.userTypeKey);
+		}
+	}
+
+	/**
+	 * Verifica si el usuario está autenticado
+	 * @returns {boolean} True si tiene token, false si no
+	 */
+	isAuthenticated() {
+		return !!this.getToken();
+	}
+
+	/**
+	 * Obtiene los headers de autorización para las peticiones
+	 * @returns {Object} Headers con Authorization
+	 */
+	getAuthHeaders() {
+		const token = this.getToken();
+		const headers = {
+			'Content-Type': 'application/json'
+		};
+
+		if (token) {
+			headers['Authorization'] = `Bearer ${token}`;
+		}
+
+		return headers;
+	}
+
+	/**
+	 * Realiza una petición autenticada
+	 * @param {string} url - URL de la petición
+	 * @param {Object} options - Opciones de fetch
+	 * @returns {Promise} Respuesta de la petición
+	 */
+	async authenticatedFetch(url, options = {}) {
+		const config = {
+			...options,
+			headers: {
+				...this.getAuthHeaders(),
+				...options.headers
+			}
+		};
+
+		const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
+		const response = await fetch(fullUrl, config);
+
+		// Si la respuesta es 401 (no autorizado), eliminar el token
+		if (response.status === 401) {
+			this.removeToken();
+			throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+		}
+
+		return response;
+	}
+
+	/**
+	 * Realiza login y guarda el token
+	 * @param {string} email - Email del usuario
+	 * @param {string} password - Contraseña del usuario
+	 * @param {string} apiUrl - URL de la API de login
+	 * @returns {Promise<Object>} Datos de respuesta del login
+	 */
+	async login(email, password, apiUrl = '/api/login') {
+		const requestBody = JSON.stringify({ email, password });
+		
+		console.log('🔍 DEBUG LOGIN REQUEST:');
+		console.log('URL:', apiUrl);
+		console.log('Body:', requestBody);
+		console.log('Email:', email);
+		console.log('Password:', password);
+		
+		try {
+			const response = await fetch(apiUrl, {
+				method: 'POST',
+				mode: 'cors',
+				headers: {
+					'Content-Type': 'application/json',
+					'Accept': 'application/json',
+					'User-Agent': 'SvelteApp/1.0'
+				},
+				body: requestBody
+			});
+
+			console.log('📡 RESPONSE STATUS:', response.status);
+			console.log('📡 RESPONSE OK:', response.ok);
+			
+			if (!response.ok) {
+				let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+				try {
+					const errorData = await response.json();
+					errorMessage = errorData.message || errorMessage;
+					console.log('❌ ERROR DATA:', errorData);
+				} catch (e) {
+					console.log('❌ Could not parse error response');
+				}
+				throw new Error(errorMessage);
+			}
+			
+			const data = await response.json();
+			console.log('📨 RESPONSE DATA:', data);
+
+			// Guardar token si el login fue exitoso
+			if (data.message?.login?.token) {
+				this.setToken(data.message.login.token, data.type);
+			}
+
+			return data;
+			
+		} catch (error) {
+			console.log('💥 FETCH ERROR:', error);
+			if (error instanceof TypeError && error.message.includes('fetch')) {
+				throw new Error('Error de conectividad. Verifica tu conexión a internet o si el servidor está disponible.');
+			}
+			throw error;
+		}
+	}
+
+	/**
+	 * Realiza logout
+	 */
+	logout() {
+		this.removeToken();
+	}
+
+	/**
+	 * Decodifica el payload del token JWT (sin verificar la firma)
+	 * @returns {Object|null} Payload del token o null si no es válido
+	 */
+	getTokenPayload() {
+		const token = this.getToken();
+		if (!token) return null;
+
+		try {
+			const parts = token.split('.');
+			if (parts.length !== 3) return null;
+
+			const payload = atob(parts[1]);
+			return JSON.parse(payload);
+		} catch (error) {
+			console.error('Error al decodificar token:', error);
+			return null;
+		}
+	}
+
+	/**
+	 * Verifica si el token ha expirado
+	 * @returns {boolean} True si ha expirado, false si no
+	 */
+	isTokenExpired() {
+		const payload = this.getTokenPayload();
+		if (!payload || !payload.exp) return true;
+
+		const now = Math.floor(Date.now() / 1000);
+		return payload.exp < now;
+	}
+
+	/**
+	 * Obtiene información del usuario desde el token
+	 * @returns {Object|null} Información del usuario o null
+	 */
+	getUserInfo() {
+		const payload = this.getTokenPayload();
+		const userType = this.getUserType();
+
+		if (!payload) return null;
+
+		return {
+			sub: payload.sub,
+			userType,
+			iss: payload.iss,
+			iat: payload.iat,
+			exp: payload.exp,
+			isExpired: this.isTokenExpired()
+		};
+	}
+}
+
+// Instancia por defecto del servicio
+export const authService = new AuthService('https://cetech.roque.tecnm.mx');
+
+// Funciones de conveniencia para autenticación
+export const getToken = () => authService.getToken();
+export const setToken = (token, userType) => authService.setToken(token, userType);
+export const removeToken = () => authService.removeToken();
+export const isAuthenticated = () => authService.isAuthenticated();
+export const logout = () => authService.logout();
+export const getUserInfo = () => authService.getUserInfo();
