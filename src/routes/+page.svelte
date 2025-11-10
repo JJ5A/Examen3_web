@@ -26,29 +26,34 @@
   }
 
   // Manejar login exitoso
-  async function handleLoginSuccess(evtOrData) {
-    const data = evtOrData?.detail ?? evtOrData ?? {};
+  async function handleLoginSuccess(event) {
+    const data = event?.detail ?? {};
     console.log('Login exitoso:', data);
 
     try {
       showMsg('Login exitoso. Redirigiendo...');
       
-      // Pequeña pausa para mostrar el mensaje
-      setTimeout(() => {
-        goto('/dashboard');
-      }, 1000);
+      // Verificar que el token se haya guardado correctamente
+      if (authService.isAuthenticated()) {
+        console.log('Token guardado correctamente, redirigiendo al dashboard...');
+        
+        // Usar una redirección inmediata
+        await goto('/dashboard', { replaceState: true });
+      } else {
+        throw new Error('Token no se guardó correctamente');
+      }
       
     } catch (error) {
       console.error('Error en redirección:', error);
-      showMsg(`Error: ${error.message}`);
+      showMsg(`Error en redirección: ${error.message}`);
     }
   }
 
   // Manejar error de login
-  function handleLoginError(evtOrErr) {
-    const error = evtOrErr?.detail ?? evtOrErr ?? {};
+  function handleLoginError(event) {
+    const error = event?.detail ?? {};
     console.error('Error en login:', error);
-    showMsg(`Error en login: ${error.message || 'Credenciales incorrectas'}`);
+    showMsg(`Error en login: ${error.error || 'Credenciales incorrectas'}`);
   }
 </script>
 

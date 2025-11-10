@@ -116,14 +116,18 @@ export class AuthService {
 	async login(email, password, apiUrl = '/api/login') {
 		const requestBody = JSON.stringify({ email, password });
 		
+		// Usar la URL tal como se pasa (relativa o absoluta)
+		const fullUrl = apiUrl.startsWith('http') ? apiUrl : `${this.baseUrl}${apiUrl}`;
+		
 		console.log('🔍 DEBUG LOGIN REQUEST:');
-		console.log('URL:', apiUrl);
+		console.log('API URL:', apiUrl);
+		console.log('Full URL:', fullUrl);
 		console.log('Body:', requestBody);
 		console.log('Email:', email);
 		console.log('Password:', password);
 		
 		try {
-			const response = await fetch(apiUrl, {
+			const response = await fetch(fullUrl, {
 				method: 'POST',
 				mode: 'cors',
 				headers: {
@@ -155,6 +159,9 @@ export class AuthService {
 			// Guardar token si el login fue exitoso
 			if (data.message?.login?.token) {
 				this.setToken(data.message.login.token, data.type);
+				console.log('✅ Token guardado exitosamente');
+			} else {
+				console.warn('⚠️ Token no encontrado en la respuesta');
 			}
 
 			return data;

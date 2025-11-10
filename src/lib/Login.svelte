@@ -1,6 +1,10 @@
 <script>
+	import { createEventDispatcher } from 'svelte';
 	import '../css/login.css';
 	import { AuthService } from './auth.js';
+	
+	// Crear dispatcher para eventos
+	const dispatch = createEventDispatcher();
 	
 	// Crear una instancia local del servicio
 	const authService = new AuthService();
@@ -67,13 +71,19 @@
 			console.warn('No se pudo guardar el token en authService:', err);
 		}
 
+		// Crear objeto de datos de éxito
+		const successData = {
+			token,
+			userType,
+			fullResponse: data
+		};
+
+		// Disparar evento de éxito
+		dispatch('success', successData);
+
 		// Llamar callback de éxito si existe
 		if (onsuccess) {
-			onsuccess({
-				token,
-				userType,
-				fullResponse: data
-			});
+			onsuccess(successData);
 		}
 
 		// También llamar onlogin para compatibilidad
@@ -98,13 +108,19 @@
 			errorMessage = error.message || errorMessage;
 		}
 
+		// Crear objeto de error
+		const errorData = {
+			error: errorMessage,
+			originalError: error,
+			serverResponse: serverData
+		};
+
+		// Disparar evento de error
+		dispatch('error', errorData);
+
 		// Llamar callback de error si existe
 		if (onerror) {
-			onerror({
-				error: errorMessage,
-				originalError: error,
-				serverResponse: serverData
-			});
+			onerror(errorData);
 		}
 
 		// También llamar onlogin para compatibilidad
