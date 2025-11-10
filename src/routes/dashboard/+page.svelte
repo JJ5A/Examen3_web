@@ -179,12 +179,35 @@
 
       <!-- Acciones del Dashboard -->
       <div class="dashboard-actions">
-        <button on:click={refreshData} class="action-button">
-          🔄 Actualizar Datos
-        </button>
-        <button on:click={handleLogout} class="logout-button">
-          🚪 Cerrar Sesión
-        </button>
+        <h3>📚 Servicios Académicos</h3>
+        <div class="services-grid">
+          <button class="service-button calificaciones" on:click={() => goto('/dashboard/calificaciones')}>
+            <div class="service-icon">📊</div>
+            <div class="service-title">Calificaciones</div>
+            <div class="service-description">Ver mis calificaciones por materia</div>
+          </button>
+          
+          <button class="service-button kardex" on:click={() => goto('/dashboard/kardex')}>
+            <div class="service-icon">📋</div>
+            <div class="service-title">Kardex</div>
+            <div class="service-description">Historial académico completo</div>
+          </button>
+          
+          <button class="service-button horarios" on:click={() => goto('/dashboard/horarios')}>
+            <div class="service-icon">🕒</div>
+            <div class="service-title">Horarios</div>
+            <div class="service-description">Consultar horario de clases</div>
+          </button>
+        </div>
+        
+        <div class="general-actions">
+          <button on:click={refreshData} class="action-button">
+            🔄 Actualizar Datos
+          </button>
+          <button on:click={handleLogout} class="logout-button">
+            🚪 Cerrar Sesión
+          </button>
+        </div>
       </div>
     </div>
   {/if}
@@ -362,8 +385,97 @@
     border-top: 1px solid #e2e8f0;
   }
 
-  .dashboard-actions button {
-    margin: 0 10px;
+  .dashboard-actions h3 {
+    margin: 0 0 24px 0;
+    color: #1e40af;
+    font-size: 1.4rem;
+  }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+
+  .service-button {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .service-button:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  }
+
+  .service-button.calificaciones {
+    border-color: #3b82f6;
+  }
+
+  .service-button.calificaciones:hover {
+    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+    color: white;
+  }
+
+  .service-button.kardex {
+    border-color: #059669;
+  }
+
+  .service-button.kardex:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: white;
+  }
+
+  .service-button.horarios {
+    border-color: #d97706;
+  }
+
+  .service-button.horarios:hover {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    color: white;
+  }
+
+  .service-icon {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+  }
+
+  .service-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+
+  .service-description {
+    font-size: 0.9rem;
+    color: #64748b;
+    line-height: 1.4;
+  }
+
+  .service-button:hover .service-description {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .general-actions {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .general-actions button {
+    margin: 0;
   }
 
   @media (max-width: 768px) {
