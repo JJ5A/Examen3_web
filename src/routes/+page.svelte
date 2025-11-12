@@ -58,10 +58,6 @@
 </script>
 
 <main class="demo-container">
-  <div class="demo-header">
-    <h1 style="font-size: 60px;color: #333;"><b>Tecnologico Nacional de Mexico en Celaya</b></h1>
-  </div>
-
   {#if showResult}
     <div
       class="result-container"
