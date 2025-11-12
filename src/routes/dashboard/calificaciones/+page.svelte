@@ -138,7 +138,9 @@
                     <h4>Calificaciones Parciales:</h4>
                     <div class="parciales-grid">
                       {#each materiaData.calificaiones as calificacion}
-                        <div class="parcial-item">
+                        <div class="parcial-item"
+                             class:aprobado={calificacion.calificacion !== null && parseFloat(calificacion.calificacion) >= 70}
+                             class:reprobado={calificacion.calificacion !== null && parseFloat(calificacion.calificacion) < 70}>
                           <span class="parcial-numero">Parcial {calificacion.numero_calificacion}</span>
                           <span class="parcial-calificacion" 
                                 class:calificado={calificacion.calificacion !== null}
@@ -351,6 +353,17 @@
     background: #f8fafc;
     border-radius: 8px;
     border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+  }
+
+  .parcial-item.aprobado {
+    background: #dcfce7;
+    border-color: #86efac;
+  }
+
+  .parcial-item.reprobado {
+    background: #fee2e2;
+    border-color: #fca5a5;
   }
 
   .parcial-numero {
@@ -366,6 +379,14 @@
 
   .parcial-calificacion.calificado {
     color: #1e40af;
+  }
+
+  .parcial-item.aprobado .parcial-calificacion.calificado {
+    color: #15803d;
+  }
+
+  .parcial-item.reprobado .parcial-calificacion.calificado {
+    color: #dc2626;
   }
 
   .parcial-calificacion.pendiente {
