@@ -179,9 +179,6 @@
 
           <!-- Botones de acción -->
           <div class="sidebar-actions">
-            <button on:click={refreshData} class="sidebar-button refresh">
-              🔄 Actualizar Datos
-            </button>
             <button on:click={handleLogout} class="sidebar-button logout">
               🚪 Cerrar Sesión
             </button>
