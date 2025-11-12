@@ -111,6 +111,14 @@
         <h2>¡Bienvenido, {studentData.persona}!</h2>
         <p class="subtitle">Información académica actualizada</p>
       </div>
+      
+      {#if studentData.foto}
+        <div class="photo-card-top">
+          <div class="student-photo">
+            <img src="data:image/jpeg;base64,{studentData.foto}" alt="Foto de {studentData.persona}" />
+          </div>
+        </div>
+      {/if}
 
       <div class="student-dashboard">
         <!-- Información Personal -->
@@ -159,16 +167,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Foto del Estudiante -->
-        {#if studentData.foto}
-          <div class="info-card photo-card">
-            <h3>📷 Fotografía</h3>
-            <div class="student-photo">
-              <img src="data:image/jpeg;base64,{studentData.foto}" alt="Foto de {studentData.persona}" />
-            </div>
-          </div>
-        {/if}
       </div>
 
       <!-- Acciones del Dashboard -->
@@ -253,7 +251,7 @@
     text-align: center;
     margin-bottom: 30px;
     padding: 30px;
-    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+    background: linear-gradient(135deg, #10b981 0%, #057117 100%);
     color: white;
     border-radius: 12px;
   }
@@ -360,8 +358,19 @@
     margin-top: 4px;
   }
 
-  .photo-card {
-    text-align: center;
+  .photo-card-top {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 30px;
+    max-width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .student-photo img {
