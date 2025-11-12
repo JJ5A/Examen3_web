@@ -106,101 +106,122 @@
       </button>
     </div>
   {:else if studentData}
-    <div class="dashboard-content">
-      <div class="welcome-section">
-        <h2>¡Bienvenido, {studentData.persona}!</h2>
-        <p class="subtitle">Información académica actualizada</p>
-      </div>
-      
-      {#if studentData.foto}
-        <div class="photo-card-top">
-          <div class="student-photo">
-            <img src="data:image/jpeg;base64,{studentData.foto}" alt="Foto de {studentData.persona}" />
-          </div>
-        </div>
-      {/if}
-
-      <div class="student-dashboard">
-        <!-- Información Personal -->
-        <div class="info-card">
-          <h3>📋 Información Personal</h3>
-          <div class="info-grid">
-            <div><strong>Nombre:</strong> {studentData.persona}</div>
-            <div><strong>Número de Control:</strong> {studentData.numero_control}</div>
-            <div><strong>Email:</strong> {studentData.email}</div>
-            <div><strong>Semestre Actual:</strong> {studentData.semestre}</div>
-          </div>
-        </div>
-
-        <!-- Rendimiento Académico -->
-        <div class="info-card">
-          <h3>📊 Rendimiento Académico</h3>
-          <div class="info-grid">
-            <div><strong>Promedio Ponderado:</strong> 
-              <span class="grade">{parseFloat(studentData.promedio_ponderado).toFixed(2)}</span>
+    <div class="dashboard-layout">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-content">
+          <!-- Foto del estudiante -->
+          {#if studentData.foto}
+            <div class="sidebar-photo">
+              <img src="data:image/jpeg;base64,{studentData.foto}" alt="Foto de {studentData.persona}" />
             </div>
-            <div><strong>Promedio Aritmético:</strong> 
-              <span class="grade">{parseFloat(studentData.promedio_aritmetico).toFixed(2)}</span>
-            </div>
-            <div><strong>Créditos Acumulados:</strong> {studentData.creditos_acumulados}</div>
-            <div><strong>Porcentaje de Avance:</strong> 
-              <span class="progress-badge">{studentData.porcentaje_avance}%</span>
+          {/if}
+
+          <!-- Información Personal -->
+          <div class="sidebar-section">
+            <h3>📋 Información Personal</h3>
+            <div class="sidebar-info">
+              <div><strong>Nombre:</strong></div>
+              <div>{studentData.persona}</div>
+              
+              <div><strong>Número de Control:</strong></div>
+              <div>{studentData.numero_control}</div>
+              
+              <div><strong>Email:</strong></div>
+              <div class="email-text">{studentData.email}</div>
+              
+              <div><strong>Semestre:</strong></div>
+              <div>{studentData.semestre}</div>
             </div>
           </div>
-        </div>
 
-        <!-- Estadísticas de Materias -->
-        <div class="info-card">
-          <h3>📚 Estadísticas de Materias</h3>
-          <div class="stats-grid">
-            <div class="stat-item">
-              <span class="stat-number">{studentData.materias_cursadas}</span>
-              <span class="stat-label">Materias Cursadas</span>
-            </div>
-            <div class="stat-item success">
-              <span class="stat-number">{studentData.materias_aprobadas}</span>
-              <span class="stat-label">Aprobadas</span>
-            </div>
-            <div class="stat-item warning">
-              <span class="stat-number">{studentData.materias_reprobadas}</span>
-              <span class="stat-label">Reprobadas</span>
+          <!-- Rendimiento Académico -->
+          <div class="sidebar-section">
+            <h3>📊 Rendimiento</h3>
+            <div class="sidebar-stats">
+              <div class="stat-row">
+                <span>Promedio Ponderado:</span>
+                <span class="stat-value">{parseFloat(studentData.promedio_ponderado).toFixed(2)}</span>
+              </div>
+              <div class="stat-row">
+                <span>Promedio Aritmético:</span>
+                <span class="stat-value">{parseFloat(studentData.promedio_aritmetico).toFixed(2)}</span>
+              </div>
+              <div class="stat-row">
+                <span>Créditos:</span>
+                <span class="stat-value">{studentData.creditos_acumulados}</span>
+              </div>
+              <div class="stat-row">
+                <span>Avance:</span>
+                <span class="stat-value">{studentData.porcentaje_avance}%</span>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Acciones del Dashboard -->
-      <div class="dashboard-actions">
-        <h3>📚 Servicios Académicos</h3>
-        <div class="services-grid">
-          <button class="service-button calificaciones" on:click={() => goto('/dashboard/calificaciones')}>
-            <div class="service-icon">📊</div>
-            <div class="service-title">Calificaciones</div>
-            <div class="service-description">Ver mis calificaciones por materia</div>
-          </button>
-          
-          <button class="service-button kardex" on:click={() => goto('/dashboard/kardex')}>
-            <div class="service-icon">📋</div>
-            <div class="service-title">Kardex</div>
-            <div class="service-description">Historial académico completo</div>
-          </button>
-          
-          <button class="service-button horarios" on:click={() => goto('/dashboard/horarios')}>
-            <div class="service-icon">🕒</div>
-            <div class="service-title">Horarios</div>
-            <div class="service-description">Consultar horario de clases</div>
-          </button>
+          <!-- Estadísticas -->
+          <div class="sidebar-section">
+            <h3>📚 Materias</h3>
+            <div class="sidebar-stats">
+              <div class="stat-row">
+                <span>Cursadas:</span>
+                <span class="stat-value">{studentData.materias_cursadas}</span>
+              </div>
+              <div class="stat-row">
+                <span>Aprobadas:</span>
+                <span class="stat-value success">{studentData.materias_aprobadas}</span>
+              </div>
+              <div class="stat-row">
+                <span>Reprobadas:</span>
+                <span class="stat-value warning">{studentData.materias_reprobadas}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botones de acción -->
+          <div class="sidebar-actions">
+            <button on:click={refreshData} class="sidebar-button refresh">
+              🔄 Actualizar Datos
+            </button>
+            <button on:click={handleLogout} class="sidebar-button logout">
+              🚪 Cerrar Sesión
+            </button>
+          </div>
         </div>
-        
-        <div class="general-actions">
-          <button on:click={refreshData} class="action-button">
-            🔄 Actualizar Datos
-          </button>
-          <button on:click={handleLogout} class="logout-button">
-            🚪 Cerrar Sesión
-          </button>
+      </aside>
+
+      <!-- Contenido principal -->
+      <main class="main-content">
+        <div class="welcome-section">
+          <div class="welcome-text">
+            <h2>¡Bienvenido, {studentData.persona}!</h2>
+            <p class="subtitle">Información académica actualizada</p>
+          </div>
         </div>
-      </div>
+
+        <!-- Servicios Académicos -->
+        <div class="dashboard-actions">
+          <h3>📚 Servicios Académicos</h3>
+          <div class="services-grid">
+            <button class="service-button calificaciones" on:click={() => goto('/dashboard/calificaciones')}>
+              <div class="service-icon">📊</div>
+              <div class="service-title">Calificaciones</div>
+              <div class="service-description">Ver mis calificaciones por materia</div>
+            </button>
+            
+            <button class="service-button kardex" on:click={() => goto('/dashboard/kardex')}>
+              <div class="service-icon">📋</div>
+              <div class="service-title">Kardex</div>
+              <div class="service-description">Historial académico completo</div>
+            </button>
+            
+            <button class="service-button horarios" on:click={() => goto('/dashboard/horarios')}>
+              <div class="service-icon">🕒</div>
+              <div class="service-title">Horarios</div>
+              <div class="service-description">Consultar horario de clases</div>
+            </button>
+          </div>
+        </div>
+      </main>
     </div>
   {/if}
 </main>
@@ -241,157 +262,199 @@
     margin-bottom: 10px;
   }
 
-  .dashboard-content {
-    max-width: 1200px;
+  .dashboard-layout {
+    display: flex;
+    gap: 20px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
+    min-height: calc(100vh - 100px);
   }
 
-  .welcome-section {
-    text-align: center;
-    margin-bottom: 30px;
-    padding: 30px;
-    background: linear-gradient(135deg, #10b981 0%, #057117 100%);
-    color: white;
-    border-radius: 12px;
-  }
-
-  .welcome-section h2 {
-    margin: 0 0 10px 0;
-    font-size: 2rem;
-  }
-
-  .subtitle {
-    margin: 0;
-    opacity: 0.9;
-    font-size: 1.1rem;
-  }
-
-  .student-dashboard {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-  }
-
-  .info-card {
+  /* Sidebar Styles */
+  .sidebar {
+    width: 320px;
+    flex-shrink: 0;
     background: white;
-    border: 1px solid #e2e8f0;
     border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .info-card:hover {
-    transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    height: fit-content;
+    position: sticky;
+    top: 20px;
   }
 
-  .info-card h3 {
-    margin: 0 0 16px 0;
-    color: #1e40af;
-    font-size: 1.2rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  .sidebar-content {
+    padding: 24px;
   }
 
-  .grade {
-    font-weight: bold;
-    color: #059669;
-    font-size: 1.1rem;
-  }
-
-  .progress-badge {
-    background: #3b82f6;
-    color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-weight: bold;
-    font-size: 0.9rem;
-  }
-
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-  }
-
-  .stat-item {
+  .sidebar-photo {
     text-align: center;
-    padding: 16px;
-    background: #f8fafc;
-    border-radius: 8px;
-    border: 2px solid #e2e8f0;
+    margin-bottom: 24px;
   }
 
-  .stat-item.success {
-    background: #ecfdf5;
-    border-color: #a7f3d0;
-  }
-
-  .stat-item.warning {
-    background: #fef3c7;
-    border-color: #fcd34d;
-  }
-
-  .stat-number {
-    display: block;
-    font-size: 2rem;
-    font-weight: bold;
-    color: #1e40af;
-  }
-
-  .stat-item.success .stat-number {
-    color: #059669;
-  }
-
-  .stat-item.warning .stat-number {
-    color: #d97706;
-  }
-
-  .stat-label {
-    display: block;
-    font-size: 0.9rem;
-    color: #64748b;
-    margin-top: 4px;
-  }
-
-  .photo-card-top {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 30px;
-    max-width: fit-content;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .student-photo img {
-    width: 120px;
-    height: 150px;
+  .sidebar-photo img {
+    width: 150px;
+    height: 180px;
     object-fit: cover;
     border: 3px solid #e2e8f0;
     border-radius: 12px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   }
 
-  .dashboard-actions {
+  .sidebar-section {
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .sidebar-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 20px;
+  }
+
+  .sidebar-section h3 {
+    margin: 0 0 16px 0;
+    color: #1e40af;
+    font-size: 1rem;
+  }
+
+  .sidebar-info {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 12px;
+    font-size: 0.9rem;
+  }
+
+  .sidebar-info > div:nth-child(odd) {
+    color: #64748b;
+  }
+
+  .sidebar-info > div:nth-child(even) {
+    color: #1e293b;
+    font-weight: 500;
+  }
+
+  .email-text {
+    word-break: break-word;
+    font-size: 0.85rem !important;
+  }
+
+  .sidebar-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+  }
+
+  .stat-row > span:first-child {
+    color: #64748b;
+  }
+
+  .stat-value {
+    font-weight: bold;
+    color: #1e40af;
+    font-size: 1rem;
+  }
+
+  .stat-value.success {
+    color: #059669;
+  }
+
+  .stat-value.warning {
+    color: #d97706;
+  }
+
+  .sidebar-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .sidebar-button {
+    width: 100%;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .sidebar-button.refresh {
+    background: #3b82f6;
+    color: white;
+  }
+
+  .sidebar-button.refresh:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+  }
+
+  .sidebar-button.logout {
+    background: #dc2626;
+    color: white;
+  }
+
+  .sidebar-button.logout:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+  }
+
+  /* Main Content Styles */
+  .main-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .welcome-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 40px 30px;
+    background: white;
+    border: 3px solid #10b981;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  .welcome-text {
     text-align: center;
-    padding: 30px;
-    border-top: 1px solid #e2e8f0;
+  }
+
+  .welcome-text h2 {
+    margin: 0 0 10px 0;
+    font-size: 2rem;
+    color: #1e293b;
+  }
+
+  .subtitle {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #64748b;
+  }
+
+  .dashboard-actions {
+    padding: 30px 0;
   }
 
   .dashboard-actions h3 {
     margin: 0 0 24px 0;
     color: #1e40af;
     font-size: 1.4rem;
+    text-align: center;
   }
 
   .services-grid {
@@ -470,27 +533,23 @@
     color: rgba(255, 255, 255, 0.9);
   }
 
-  .general-actions {
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
+  @media (max-width: 1024px) {
+    .dashboard-layout {
+      flex-direction: column;
+    }
 
-  .general-actions button {
-    margin: 0;
+    .sidebar {
+      width: 100%;
+      position: static;
+    }
   }
 
   @media (max-width: 768px) {
-    .welcome-section h2 {
+    .welcome-text h2 {
       font-size: 1.5rem;
     }
-    
-    .student-dashboard {
-      grid-template-columns: 1fr;
-    }
-    
-    .stats-grid {
+
+    .services-grid {
       grid-template-columns: 1fr;
     }
   }
