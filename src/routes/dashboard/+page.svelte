@@ -89,12 +89,6 @@
 </script>
 
 <main class="demo-container">
-  <div class="demo-header">
-    <h1 style="font-size: 48px; color: #333;">
-      <b>Dashboard - Tecnológico Nacional de México en Celaya</b>
-    </h1>
-  </div>
-
   {#if isLoading}
     <div class="loading">
       <div class="spinner"></div>
