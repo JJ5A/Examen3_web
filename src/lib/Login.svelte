@@ -258,13 +258,6 @@
 						{submitButtonText}
 					{/if}
 				</button>
-				<button
-					type="button"
-					onclick={clearForm}
-					disabled={disabled || isLoading}
-					class="clear-button">
-					Limpiar
-				</button>
 			</div>
 		</form>
 	</div>
