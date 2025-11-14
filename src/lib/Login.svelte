@@ -206,59 +206,83 @@
 </script>
 
 <div class="login-container">
-	<div class="login-card">
-		<h2 class="login-title">{title}</h2>
-		
-		<form onsubmit={handleSubmit} class="login-form">
-			<!-- Campo Email -->
-			<div class="form-group">
-				<label for="email" class="form-label">Email:</label>
-				<input
-					id="email"
-					type="email"
-					bind:value={email}
-					disabled={disabled || isLoading}
-					class="form-input"
-					class:error={errors.email}
-					placeholder="ejemplo@correo.com"
-					autocomplete="email"
-				/>
-				{#if errors.email}
-					<span class="error-message">{errors.email}</span>
-				{/if}
+	<div class="login-background">
+		<div class="login-card">
+			<div class="login-header">
+				<div class="login-icon">
+					<img src="/itcelaya.webp" alt="Tecnológico de Celaya" />
+				</div>
+				<h2 class="login-title">{title}</h2>
+				<p class="login-subtitle">Tecnológico Nacional de México en Celaya</p>
 			</div>
-
-			<!-- Campo Contraseña -->
-			<div class="form-group">
-				<label for="password" class="form-label">Contraseña:</label>
-				<input
-					id="password"
-					type="password"
-					bind:value={password}
-					disabled={disabled || isLoading}
-					class="form-input"
-					class:error={errors.password}
-					placeholder="••••••••"
-					autocomplete="current-password"
-				/>
-				{#if errors.password}
-					<span class="error-message">{errors.password}</span>
-				{/if}
-			</div>
-			<!-- Botones -->
-			<div class="form-actions">
-				<button
-					type="submit"
-					disabled={!isFormValid || disabled || isLoading}
-					class="submit-button">
-					{#if isLoading}
-						<span class="loading-spinner"></span>
-						Cargando...
-					{:else}
-						{submitButtonText}
+			
+			<form onsubmit={handleSubmit} class="login-form">
+				<!-- Campo Email -->
+				<div class="form-group">
+					<div class="input-wrapper">
+						<div class="input-icon">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+								<path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+							</svg>
+						</div>
+						<input
+							id="email"
+							type="email"
+							bind:value={email}
+							disabled={disabled || isLoading}
+							class="form-input"
+							class:error={errors.email}
+							placeholder="Correo electrónico"
+							autocomplete="email"
+						/>
+					</div>
+					{#if errors.email}
+						<span class="error-message">{errors.email}</span>
 					{/if}
-				</button>
-			</div>
-		</form>
+				</div>
+
+				<!-- Campo Contraseña -->
+				<div class="form-group">
+					<div class="input-wrapper">
+						<div class="input-icon">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+								<path d="M7 10V7C7 5.34 8.34 4 10 4H14C15.66 4 17 5.34 17 7V10H18C18.55 10 19 10.45 19 11V20C19 20.55 18.55 21 18 21H6C5.45 21 5 20.55 5 20V11C5 10.45 5.45 10 6 10H7ZM9 7V10H15V7C15 6.45 14.55 6 14 6H10C9.45 6 9 6.45 9 7Z"/>
+							</svg>
+						</div>
+						<input
+							id="password"
+							type="password"
+							bind:value={password}
+							disabled={disabled || isLoading}
+							class="form-input"
+							class:error={errors.password}
+							placeholder="Contraseña"
+							autocomplete="current-password"
+						/>
+					</div>
+					{#if errors.password}
+						<span class="error-message">{errors.password}</span>
+					{/if}
+				</div>
+				<!-- Botón de envío -->
+				<div class="form-actions">
+					<button
+						type="submit"
+						disabled={!isFormValid || disabled || isLoading}
+						class="submit-button"
+						class:loading={isLoading}>
+						{#if isLoading}
+							<div class="loading-spinner"></div>
+							Accediendo...
+						{:else}
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;">
+								<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+							</svg>
+							{submitButtonText}
+						{/if}
+					</button>
+				</div>
+			</form>
+		</div>
 	</div>
 </div>
