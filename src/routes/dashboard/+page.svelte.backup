@@ -1,59 +1,58 @@
-﻿<script lang="ts">
+﻿<script>
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { AuthService } from '$lib/auth.js';
   import { StudentService } from '$lib/studentService.js';
   import '../../css/dashboard-common.css';
   import '../../css/dashboard.css';
-  import '../../css/dashboard-sidebar.css';
 
   // Crear instancias de los servicios
   const authService = new AuthService();
   const studentService = new StudentService(authService);
 
   // Estado para los datos del estudiante
-  let studentData: any = null;
-  let isLoading: boolean = true;
-  let error: string | null = null;
+  let studentData = null;
+  let isLoading = true;
+  let error = null;
 
   onMount(async () => {
-    console.log('🎯 DASHBOARD MOUNT - Iniciando...');
+    console.log('ðŸŽ¯ DASHBOARD MOUNT - Iniciando...');
     
-    // Verificar si está autenticado
+    // Verificar si estÃ¡ autenticado
     if (!authService.isAuthenticated()) {
-      console.log('❌ No está autenticado, redirigiendo...');
-      // Si no está autenticado, redirigir al login
+      console.log('âŒ No estÃ¡ autenticado, redirigiendo...');
+      // Si no estÃ¡ autenticado, redirigir al login
       goto('/');
       return;
     }
 
-    console.log('✅ Usuario autenticado');
-    console.log('🔑 Token presente:', !!authService.getToken());
+    console.log('âœ… Usuario autenticado');
+    console.log('ðŸ”‘ Token presente:', !!authService.getToken());
     
     // Mostrar info del usuario desde el token
     const userInfo = authService.getUserInfo();
-    console.log('👤 User Info:', userInfo);
+    console.log('ðŸ‘¤ User Info:', userInfo);
 
     try {
-      console.log('📡 Iniciando petición de datos del estudiante...');
+      console.log('ðŸ“¡ Iniciando peticiÃ³n de datos del estudiante...');
       
       // Obtener datos del estudiante usando el servicio separado
-      const response: any = await studentService.getStudentData();
-      console.log('📨 Respuesta completa recibida:', response);
+      const response = await studentService.getStudentData();
+      console.log('ðŸ“¨ Respuesta completa recibida:', response);
       
       if (response && response.data) {
         studentData = response.data;
-        console.log('✅ Datos del estudiante cargados exitosamente:', studentData);
+        console.log('âœ… Datos del estudiante cargados exitosamente:', studentData);
       } else {
-        console.log('⚠️ Respuesta recibida pero sin datos:', response);
+        console.log('âš ï¸ Respuesta recibida pero sin datos:', response);
         error = 'La respuesta del servidor no contiene datos del estudiante';
       }
-    } catch (err: any) {
-      console.error('💥 Error al cargar datos del estudiante:', err);
-      error = err.message || 'Error desconocido';
+    } catch (err) {
+      console.error('ðŸ’¥ Error al cargar datos del estudiante:', err);
+      error = err.message;
       
-      // Si hay error de autenticación, redirigir al login
-      if (err.message && (err.message.includes('401') || err.message.includes('token'))) {
+      // Si hay error de autenticaciÃ³n, redirigir al login
+      if (err.message.includes('401') || err.message.includes('token')) {
         authService.logout();
         goto('/');
       }
@@ -68,22 +67,22 @@
   }
 
   async function refreshData() {
-    console.log('🔄 Refrescando datos...');
+    console.log('ðŸ”„ Refrescando datos...');
     isLoading = true;
     error = null;
     
     try {
-      const response: any = await studentService.getStudentData();
-      console.log('🔄 Datos refrescados:', response);
+      const response = await studentService.getStudentData();
+      console.log('ðŸ”„ Datos refrescados:', response);
       
       if (response && response.data) {
         studentData = response.data;
       } else {
         error = 'La respuesta del servidor no contiene datos del estudiante';
       }
-    } catch (err: any) {
-      console.error('💥 Error al refrescar datos:', err);
-      error = err.message || 'Error al refrescar datos';
+    } catch (err) {
+      console.error('ðŸ’¥ Error al refrescar datos:', err);
+      error = err.message;
     } finally {
       isLoading = false;
     }
@@ -119,14 +118,14 @@
             </div>
           {/if}
 
-          <!-- Información Personal -->
+          <!-- InformaciÃ³n Personal -->
           <div class="sidebar-section">
-            <h3>📋 Información Personal</h3>
+            <h3>ðŸ“‹ InformaciÃ³n Personal</h3>
             <div class="sidebar-info">
               <div><strong>Nombre:</strong></div>
               <div>{studentData.persona}</div>
               
-              <div><strong>Número de Control:</strong></div>
+              <div><strong>NÃºmero de Control:</strong></div>
               <div>{studentData.numero_control}</div>
               
               <div><strong>Email:</strong></div>
@@ -137,20 +136,20 @@
             </div>
           </div>
 
-          <!-- Rendimiento Académico -->
+          <!-- Rendimiento AcadÃ©mico -->
           <div class="sidebar-section">
-            <h3>📊 Rendimiento</h3>
+            <h3>ðŸ“Š Rendimiento</h3>
             <div class="sidebar-stats">
               <div class="stat-row">
                 <span>Promedio Ponderado:</span>
                 <span class="stat-value">{parseFloat(studentData.promedio_ponderado).toFixed(2)}</span>
               </div>
               <div class="stat-row">
-                <span>Promedio Aritmético:</span>
+                <span>Promedio AritmÃ©tico:</span>
                 <span class="stat-value">{parseFloat(studentData.promedio_aritmetico).toFixed(2)}</span>
               </div>
               <div class="stat-row">
-                <span>Créditos:</span>
+                <span>CrÃ©ditos:</span>
                 <span class="stat-value">{studentData.creditos_acumulados}</span>
               </div>
               <div class="stat-row">
@@ -160,9 +159,9 @@
             </div>
           </div>
 
-          <!-- Estadísticas -->
+          <!-- EstadÃ­sticas -->
           <div class="sidebar-section">
-            <h3>📚 Materias</h3>
+            <h3>ðŸ“š Materias</h3>
             <div class="sidebar-stats">
               <div class="stat-row">
                 <span>Cursadas:</span>
@@ -179,10 +178,10 @@
             </div>
           </div>
 
-          <!-- Botones de acción -->
+          <!-- Botones de acciÃ³n -->
           <div class="sidebar-actions">
             <button on:click={handleLogout} class="sidebar-button logout">
-              🚪 Cerrar Sesión
+              ðŸšª Cerrar SesiÃ³n
             </button>
           </div>
         </div>
@@ -192,34 +191,35 @@
       <main class="main-content">
         <div class="welcome-section">
           <div class="welcome-text">
-            <h2>¡Bienvenido, {studentData.persona}!</h2>
+            <h2>Â¡Bienvenido, {studentData.persona}!</h2>
+            <p class="subtitle">InformaciÃ³n acadÃ©mica actualizada</p>
           </div>
         </div>
 
-        <!-- Servicios Académicos -->
+        <!-- Servicios AcadÃ©micos -->
         <div class="dashboard-actions">
-          <h3>📚 Servicios Académicos</h3>
+          <h3>ðŸ“š Servicios AcadÃ©micos</h3>
           <div class="services-grid">
             <button class="service-button calificaciones" on:click={() => goto('/dashboard/calificaciones')}>
-              <div class="service-icon">📊</div>
+              <div class="service-icon">ðŸ“Š</div>
               <div class="service-title">Calificaciones</div>
               <div class="service-description">Ver mis calificaciones por materia</div>
             </button>
             
             <button class="service-button kardex" on:click={() => goto('/dashboard/kardex')}>
-              <div class="service-icon">📋</div>
+              <div class="service-icon">ðŸ“‹</div>
               <div class="service-title">Kardex</div>
-              <div class="service-description">Historial académico completo</div>
+              <div class="service-description">Historial acadÃ©mico completo</div>
             </button>
             
             <button class="service-button horarios" on:click={() => goto('/dashboard/horarios')}>
-              <div class="service-icon">🔔</div>
+              <div class="service-icon">ðŸ•’</div>
               <div class="service-title">Horarios</div>
               <div class="service-description">Consultar horario de clases</div>
             </button>
             
             <button class="service-button notificaciones" on:click={() => goto('/dashboard/notificaciones')}>
-              <div class="service-icon">🔔</div>
+              <div class="service-icon">ðŸ””</div>
               <div class="service-title">Notificaciones</div>
               <div class="service-description">Centro de avisos y recordatorios</div>
             </button>

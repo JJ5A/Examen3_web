@@ -1,0 +1,224 @@
+/* =================================== */
+/* ESTILOS PARA SIDEBAR DEL DASHBOARD */
+/* =================================== */
+
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  gap: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-content {
+  padding: 24px;
+  height: 100%;
+}
+
+/* Foto del estudiante */
+.sidebar-photo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.sidebar-photo img {
+  width: 120px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Secciones del sidebar */
+.sidebar-section {
+  margin-bottom: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-section h3 {
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-info {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.sidebar-info > div {
+  color: white;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.sidebar-info > div:nth-child(odd) {
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.sidebar-info > div:nth-child(even) {
+  font-weight: 500;
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+
+.email-text {
+  font-size: 0.8rem !important;
+  opacity: 0.9 !important;
+}
+
+/* Estadísticas del sidebar */
+.sidebar-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-row:last-child {
+  border-bottom: none;
+}
+
+.stat-row span:first-child {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.stat-value {
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.stat-value.success {
+  color: #10b981;
+}
+
+.stat-value.warning {
+  color: #f59e0b;
+}
+
+/* Botones del sidebar */
+.sidebar-actions {
+  margin-top: 32px;
+}
+
+.sidebar-button {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sidebar-button.logout {
+  background: rgba(239, 68, 68, 0.2);
+  color: white;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.sidebar-button.logout:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+/* Contenido principal */
+.main-content {
+  flex: 1;
+  padding: 20px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    order: 2;
+  }
+  
+  .main-content {
+    order: 1;
+  }
+  
+  .sidebar-content {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 20px;
+    align-items: start;
+  }
+  
+  .sidebar-photo {
+    grid-row: 1 / -1;
+    margin: 0;
+  }
+  
+  .sidebar-section {
+    margin-bottom: 0;
+  }
+  
+  .sidebar-actions {
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar-content {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .sidebar-photo {
+    align-self: center;
+  }
+  
+  .sidebar-photo img {
+    width: 100px;
+    height: 125px;
+  }
+}

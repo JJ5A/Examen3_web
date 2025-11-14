@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { AuthService } from '$lib/auth.js';
@@ -6,9 +6,9 @@
 
   const authService = new AuthService();
   
-  let calificacionesData = null;
-  let isLoading = true;
-  let error = null;
+  let calificacionesData: any = null;
+  let isLoading: boolean = true;
+  let error: string | null = null;
 
   onMount(async () => {
     console.log('🎯 CALIFICACIONES - Iniciando...');
@@ -38,11 +38,11 @@
       } else {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('💥 Error al cargar calificaciones:', err);
-      error = err.message;
+      error = err.message || 'Error desconocido';
       
-      if (err.message.includes('401') || err.message.includes('token')) {
+      if (err.message && (err.message.includes('401') || err.message.includes('token'))) {
         authService.logout();
         goto('/');
       }
@@ -60,16 +60,16 @@
     goto('/');
   }
 
-  function calcularPromedioParcial(calificaciones) {
-    const calificacionesValidas = calificaciones.filter(c => c.calificacion !== null && c.calificacion !== '');
+  function calcularPromedioParcial(calificaciones: any[]): number | string {
+    const calificacionesValidas = calificaciones.filter((c: any) => c.calificacion !== null && c.calificacion !== '');
     if (calificacionesValidas.length === 0) return 'N/A';
     
-    const suma = calificacionesValidas.reduce((sum, c) => sum + parseFloat(c.calificacion), 0);
-    return (suma / calificacionesValidas.length).toFixed(1);
+    const suma = calificacionesValidas.reduce((sum: number, c: any) => sum + parseFloat(c.calificacion), 0);
+    return parseFloat((suma / calificacionesValidas.length).toFixed(1));
   }
 
-  function obtenerUltimaCalificacion(calificaciones) {
-    const calificacionesValidas = calificaciones.filter(c => c.calificacion !== null && c.calificacion !== '');
+  function obtenerUltimaCalificacion(calificaciones: any[]) {
+    const calificacionesValidas = calificaciones.filter((c: any) => c.calificacion !== null && c.calificacion !== '');
     if (calificacionesValidas.length === 0) return 'Sin calificar';
     
     return calificacionesValidas[calificacionesValidas.length - 1].calificacion;
@@ -127,9 +127,9 @@
                       </div>
                     </div>
                     <div class="promedio-badge" 
-                         class:alta={calcularPromedioParcial(materiaData.calificaiones) >= 90}
-                         class:media={calcularPromedioParcial(materiaData.calificaiones) >= 70 && calcularPromedioParcial(materiaData.calificaiones) < 90}
-                         class:baja={calcularPromedioParcial(materiaData.calificaiones) < 70 && calcularPromedioParcial(materiaData.calificaiones) !== 'N/A'}>
+                         class:alta={typeof calcularPromedioParcial(materiaData.calificaiones) === 'number' && calcularPromedioParcial(materiaData.calificaiones) >= 90}
+                         class:media={typeof calcularPromedioParcial(materiaData.calificaiones) === 'number' && calcularPromedioParcial(materiaData.calificaiones) >= 70 && calcularPromedioParcial(materiaData.calificaiones) < 90}
+                         class:baja={typeof calcularPromedioParcial(materiaData.calificaiones) === 'number' && calcularPromedioParcial(materiaData.calificaiones) < 70}>
                       {calcularPromedioParcial(materiaData.calificaiones)}
                     </div>
                   </div>

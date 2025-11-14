@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { AuthService } from '$lib/auth.js';
@@ -6,9 +6,9 @@
 
   const authService = new AuthService();
   
-  let horariosData = null;
-  let isLoading = true;
-  let error = null;
+  let horariosData: any = null;
+  let isLoading: boolean = true;
+  let error: string | null = null;
 
   onMount(async () => {
     console.log('🎯 HORARIOS - Iniciando...');
@@ -38,11 +38,11 @@
       } else {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('💥 Error al cargar horarios:', err);
-      error = err.message;
+      error = err.message || 'Error desconocido';
       
-      if (err.message.includes('401') || err.message.includes('token')) {
+      if (err.message && (err.message.includes('401') || err.message.includes('token'))) {
         authService.logout();
         goto('/');
       }
@@ -60,8 +60,8 @@
     goto('/');
   }
 
-  function formatearDia(dia) {
-    const dias = {
+  function formatearDia(dia: string) {
+    const dias: { [key: string]: string } = {
       'lunes': 'Lunes',
       'martes': 'Martes', 
       'miercoles': 'Miércoles',
@@ -72,7 +72,7 @@
     return dias[dia] || dia;
   }
 
-  function formatearHora(hora) {
+  function formatearHora(hora: string) {
     if (!hora) return '';
     return hora.replace('-', ' - ');
   }

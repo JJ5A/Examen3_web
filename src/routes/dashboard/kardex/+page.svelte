@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { AuthService } from '$lib/auth.js';
@@ -6,10 +6,10 @@
 
   const authService = new AuthService();
   
-  let kardex = null;
-  let porcentajeAvance = null;
-  let isLoading = true;
-  let error = null;
+  let kardex: any = null;
+  let porcentajeAvance: any = null;
+  let isLoading: boolean = true;
+  let error: string | null = null;
 
   onMount(async () => {
     console.log('🎯 KARDEX - Iniciando...');
@@ -41,11 +41,11 @@
       } else {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
-    } catch (err) {
-      console.error('💥 Error al cargar kardex:', err);
-      error = err.message;
+    } catch (err: any) {
+      console.error('💥 Error cargando kardex:', err);
+      error = err.message || 'Error desconocido';
       
-      if (err.message.includes('401') || err.message.includes('token')) {
+      if (err.message && (err.message.includes('401') || err.message.includes('token'))) {
         authService.logout();
         goto('/');
       }
@@ -63,7 +63,7 @@
     goto('/');
   }
 
-  function agruparPorSemestre(materias) {
+  function agruparPorSemestre(materias: any[]) {
     if (!Array.isArray(materias)) return {};
     
     return materias.reduce((grupos, materia) => {
@@ -76,7 +76,7 @@
     }, {});
   }
 
-  function calcularEstadisticas(materias) {
+  function calcularEstadisticas(materias: any[]) {
     if (!Array.isArray(materias)) return { totalMaterias: 0, aprobadas: 0, reprobadas: 0, promedio: 0 };
     
     const totalMaterias = materias.length;
